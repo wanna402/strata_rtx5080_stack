@@ -44,12 +44,12 @@
 | **`configs/strata-scheme-B-novision.json`** | 配置 | 方案 B：纯文本极速版，卸掉视觉把显存让给专家缓存 |
 | **`launcher.py`** | 脚本 | 选方案 → 写运行配置 → 拉网关与托盘 → 启动引擎 |
 | **`stack_tray.py`** | 脚本 | 系统托盘：状态、快捷开关、安全退出 |
-| **`show_banner.py`** | 脚本 | 启动横幅渲染 |
+| **`Strata-启动.bat`** | 脚本 | 启动入口：选方案 → 写配置 → 拉网关 → 启动引擎 |
+| **`Strata-启动.bat.utf8-master.txt`** | 文本 | 上面那个 .bat 的 UTF-8 可读副本（.bat 本体是 GBK，GitHub 上会显示乱码，改它请改这份） |
 | **`gateway/gateway_8081.py`** | 脚本 | **统一网关 8081**：OpenAI / Anthropic / Responses 三协议原生；空回复补刀续写、思考档位粘住、剪枝 v2、开工方式注入、`strata-fast/code/deep/nothink` 虚拟档位 |
 | **`gateway/mcp_gateway_8087.py`** | 脚本 | MCP 网关 8087（工具/计费/配额） |
 | **`gateway/personal_memory.py`** | 脚本 | 个人记忆（本地持久化） |
 | **`gateway/*.example.json`** | 模板 | MCP / skills 服务器配置模板；本机覆盖层 `*.local.json` 不入库 |
-| **`Strata-启动.bat`** 等 | 脚本 | 启动入口与方案切换、内存压缩开关 |
 | **`AGENTS.md`** | 规则 | 给在这台机器上干活的 AI 的操作规则 |
 | **`VERSION.txt`** | 文档 | 当前版本与目录分布 |
 
@@ -124,6 +124,21 @@ UPDATE.bat          :: 非 git 克隆会提示，忽略即可；它会从签名 
 
 上游换的是 `H:\Strata-main`（源码 + 引擎），**本仓库一行都不用动**。
 换完引擎后本仓库的 `machine-profile.json` 里 `install.engine_version` 需要跟着更新。
+
+---
+
+## Windows 侧的一次性调优（不属于本仓库，只是记在这里备查）
+
+64GB 内存要常驻 47GB 模型，Windows 内存压缩与 SysMain 有帮助。这是**系统级**设置，不随仓库分发，需要时用管理员 PowerShell 手工执行一次：
+
+```powershell
+Enable-MMAgent -MemoryCompression          # 开启内存压缩
+Set-Service SysMain -StartupType Automatic  # SysMain 开机自动
+Start-Service SysMain
+```
+
+补充：本机 `HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\DisablePagingExecutive` 当前为 **1**
+（内核内存不换出，对大模型有利），早期"彻底修复"脚本曾尝试改成 0，后来未采用 —— **保持 1 更好**。
 
 ---
 
