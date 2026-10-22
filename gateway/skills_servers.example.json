@@ -1,0 +1,93 @@
+{
+  "version": "1.0",
+  "comment": "工具平面 local-skill 配置模板。出厂示例进 Git；本机特化复制为 skills_servers.local.json（Git 自动忽略），同名 skill 以 local 为准。网关内联技能（history-compact）不占表、不在此列。tool_schema 为该技能在 MCP /mcp tools/list 里的入参 JSON Schema（缺省则回退通用 object）。",
+  "skills": [
+    {
+      "name": "memory-recall",
+      "enabled": true,
+      "category": "memory",
+      "handler": "memory_recall",
+      "desc": "海马体召回（personal_memory + 8086 向量）；依赖缺失或 8086 未起时返回 503 明示",
+      "tool_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "召回关键词/问题"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "返回条数 1-5，默认 3"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "billing-stats",
+      "enabled": true,
+      "category": "billing",
+      "handler": "billing_stats",
+      "desc": "token/费用账本只读查询；无账本文件时返回 503 明示",
+      "tool_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "clock",
+      "enabled": true,
+      "category": "time",
+      "handler": "clock",
+      "desc": "本机时间（ISO + 星期），消灭模型瞎编日期",
+      "tool_schema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "workspace-read",
+      "enabled": true,
+      "category": "workspace",
+      "handler": "workspace_read",
+      "desc": "沙盒只读文件（限根目录内、禁隐藏/.git、单文件≤64KB）",
+      "tool_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "相对网关根目录的文件路径（禁绝对路径/..）"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    },
+    {
+      "name": "web-search",
+      "enabled": true,
+      "category": "network",
+      "handler": "web_search",
+      "desc": "联网搜索（Bing 国内直连，约 0.5s，无需 Key、不用挂代理），返回 title/url/snippet。Clash 没开时用它；要 DuckDuckGo 的结果用 ddg-search。",
+      "tool_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "搜索词"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "返回条数 1-10，默认 5"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  ]
+}

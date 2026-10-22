@@ -1,0 +1,120 @@
+{
+  "$comment": [
+    "本文件 = 这台电脑（RTX 5080 + 64GB RAM）的 Strata 调优档案，是本仓库唯一的'机器专属设置'事实源。",
+    "改调优时：先改这里，再同步 configs/strata-scheme-*.json（launcher 每次启动都用 configs/ 的模板重写运行配置）。",
+    "与机器无关的通用层（上游 Strata 源码、模型权重、专家包）不在本仓库，见 decoupled 段。"
+  ],
+  "profile": "rtx5080-16gb / 64gb-ram / win11",
+  "updated": "2026-10-22",
+
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "vram_mib": 16303,
+    "compute_capability": "12.0 (sm_120)",
+    "driver": "617.42",
+    "cuda_runtime": "13.0",
+    "engine_min_driver": "580.65",
+    "system_ram_gib": 63.8,
+    "cpu_cores_physical": 16,
+    "os": "Windows 11 (10.0.26300)",
+    "disks": {
+      "H": "模型/权重/包/设置（宽裕）",
+      "C": "系统盘（紧张，~33G 空闲，清理优先动这里的缓存）"
+    }
+  },
+
+  "install": {
+    "source_install": "H:\\Strata-main",
+    "strata_source_version": "0.2.2",
+    "engine_version": "0.1.47",
+    "engine_dir": "H:\\Strata-main\\engine",
+    "engine_provenance": "官方签名 feed（ed25519 key 5d1bc23abbeffd0d 验签通过，6/6 文件 SHA-256 校验）",
+    "engine_rollback": "无（engine/.previous 已按要求删除）",
+    "python": "C:\\Python312 (3.12.8)",
+    "venv": "H:\\Strata-main\\.venv",
+    "settings_file": "H:\\Strata-settings\\settings.json",
+    "settings_junction": "C:\\Users\\Administrator\\AppData\\Roaming\\Strata -> H:\\Strata-settings (0 字节联接)",
+    "desktop_app": "已卸载（官方 0.2.2 桌面版与本定制栈冲突：两套引擎、参数不同、抢内存）"
+  },
+
+  "model": {
+    "name": "qwen3.8-flash-next-abliterated-iq3_s",
+    "family": "qwen3.8-flash-next",
+    "size": "IQ3_S",
+    "native_gguf": "H:\\models\\Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00001-of-00002.gguf",
+    "ple_gguf": "H:\\models\\Qwen3.8-Flash-Next-GSQ-RCO-abliterated-IQ3_S-00002-of-00002.gguf",
+    "ple_note": "shard2 是共用的 FP8 n-gram 表，与官方 IQ3_S 同一份文件",
+    "experts_pack": "H:\\Strata-data\\packs\\abliterated-iq3_s",
+    "mtp": "H:\\Strata-data\\mtp\\rt",
+    "tokenizer": "H:\\Strata-data\\packs\\abliterated-iq3_s\\tokenizer",
+    "expert_profile_in": "H:\\Strata-main\\data\\expert-profile.bin",
+    "expert_profile_out": "H:\\Strata-custom\\profile-coding.bin",
+    "mmproj": "H:\\models\\mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+    "naming_rule": "两个分片必须同名主干，引擎按 gguf_split_paths 配对；只改一个就起不来"
+  },
+
+  "tuning": {
+    "_note": "以下 = configs/ 里两个方案的共同部分（方案A只多 --vision，方案B去掉视觉）",
+    "max_context": 131072,
+    "kv": "int8",
+    "kv_resident": 32768,
+    "expert_cache": "auto",
+    "prefill": "auto",
+    "spec": 2,
+    "spec_min_p": 0.5,
+    "adapt_async": 1,
+    "host_core": "last",
+    "prompt_cache": ["--prompt-cache-spread", "--prompt-cache-tail"],
+    "expert_profile_save_every": 1,
+    "vram_reserve_mib": 1024,
+    "sampling": { "temperature": 1.0, "top_p": 0.95, "top_k": 20 },
+    "gpu": 0
+  },
+
+  "schemes": {
+    "A": {
+      "name": "全能视觉甜点版",
+      "config": "configs/strata-scheme-A-vision.json",
+      "extra_args": ["--vision"],
+      "vision": { "gpu": false, "max_tokens": 1024, "note": "CPU 读图，不抢显存" },
+      "use": "默认。需要看图/图表时用。"
+    },
+    "B": {
+      "name": "纯文本极速冲刺版",
+      "config": "configs/strata-scheme-B-novision.json",
+      "extra_args": [],
+      "use": "纯文本/代码冲刺。卸掉视觉释放约 1.5G 显存给专家缓存，实测 65-75+ tok/s。"
+    }
+  },
+
+  "ports": {
+    "8083": "Strata 模型服务（OpenAI + Anthropic + Responses 原生）",
+    "8081": "统一网关 gateway_8081.py（补刀续写 / 思考档位粘住 / 剪枝 v2 / 开工方式注入 / strata-fast,code,deep,nothink 虚拟档位）",
+    "8087": "MCP 网关 mcp_gateway_8087.py"
+  },
+
+  "limits_and_tradeoffs": [
+    "16GB 显存在 131072 上下文下，专家缓存占 7.25~7.53 GiB，只剩约 0.55~0.62 GiB，引擎会告警 #2065（可能掉速甚至卡窗口）。0.1.45 起就如此，非升级引入。",
+    "想更稳：把 configs 里 --vram-reserve-mib 从 1024 提到 1536（专家缓存变小、命中率略降）。用户 2026-10-22 决定保持 1024 不动。",
+    "64GB 内存下专家常驻约 46.84 GiB，装载需 30~45 秒；方案 A 与脚本栈不可与其它模型实例同时运行。",
+    "H:\\Strata-data\\mtp\\tensors（5GB 原始张量）已删，引擎只读 mtp\\rt；日后重建 MTP 会重新下载。"
+  ],
+
+  "decoupled": {
+    "_note": "与本机调优无关、或属于上游/大文件资产的部分，一律不进这个仓库",
+    "upstream_source": "H:\\Strata-main（上游 Strata 0.2.2 源码，更新时整包覆盖）",
+    "weights": "H:\\models（134GB GGUF 原始权重）",
+    "prepared_model": "H:\\Strata-data\\packs + mtp（官方准备好的专家包与 MTP）",
+    "runtime_logs": "H:\\Strata-custom\\log（引擎日志 8083_main_YYYYMMDD.log）",
+    "tooling_binaries": "H:\\Strata-custom\\bin（uv/uvx，47MB 第三方二进制）",
+    "machine_overlay": "gateway/mcp_servers.local.json（本机覆盖层，文件自带说明）",
+    "runtime_state": "gateway/miracle_api_keys.json, gateway/token_billing_stats.json（网关运行时写）"
+  },
+
+  "how_to_tune": [
+    "1) 改这个文件里的 tuning 段，然后同步 configs/strata-scheme-*.json 的 args。",
+    "2) 双击 Strata-启动.bat → 选方案 → 在命令窗口看 8083 实时日志（reading the prompt / done: N tokens in Xs (Y tok/s)）。",
+    "3) 调完 git add + commit，版本轨迹就是这台机器的调优史。",
+    "4) 别改 H:\\models 里的分片名；别动 configs 里的路径而不同时更新本文件。"
+  ]
+}

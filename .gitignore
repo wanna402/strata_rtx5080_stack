@@ -1,0 +1,34 @@
+# ── 解耦出去、不进版本库的东西 ────────────────────────────────
+# 运行时产物
+log/
+gateway/logs/
+**/__pycache__/
+*.pyc
+
+# 第三方二进制（47MB 的 uv/uvx，路径由 gateway/mcp_servers.local.json 引用）
+bin/
+
+# 引擎每次运行重写的专家画像（profile-coding.bin）
+profile-coding.bin
+
+# 网关运行时写的状态
+gateway/miracle_api_keys.json
+gateway/token_billing_stats.json
+
+# 本机覆盖层（文件自己的注释就写了"本机覆盖层（Git 忽略）"）：
+# 换机器/换网络时改 example 再拷成 local
+gateway/mcp_servers.local.json
+
+# launcher 每次启动从 configs/ 模板生成的运行配置副本（源在 configs/）
+/strata-*.json
+
+# 手工备份与临时文件
+*.bak
+*.bak-*
+*.utf8-master.txt.bak
+test_gbk.txt
+test_utf8.txt
+
+# 系统噪音
+Thumbs.db
+desktop.ini

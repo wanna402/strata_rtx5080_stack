@@ -1,0 +1,41 @@
+@echo off
+title Strata智能栈
+cd /d "H:\Strata-main"
+if not exist "log" mkdir log
+
+echo ===============================================
+echo  Strata 智能栈一键启动（定制层：H:\Strata-custom）
+"C:\Python312\python.exe" -c "import json;e=json.load(open('H:/Strata-main/engine/BUILD.json',encoding='utf-8'));c=json.load(open('H:/Strata-custom/strata-abliterated-iq3_s.json',encoding='utf-8-sig'));a=c['args'];print(' 引擎版本 :',e.get('version'));print(' 启动模型 :',c.get('model_name'));print(' 端口     :',c.get('port'));print(' 上下文   :',a[a.index('--max-context')+1])"
+type "H:\Strata-custom\VERSION.txt"
+echo  网页聊天: http://127.0.0.1:8083  前端统一入口: http://127.0.0.1:8081/v1
+echo ===============================================
+set /p dummy=按 Enter 开始加载（直接关窗口可取消）...
+echo.
+
+copy /Y "H:\Strata-custom\strata-abliterated-iq3_s.json" "H:\Strata-main\" >nul
+echo autostart > "H:\Strata-custom\gateway\logs\autostart.trigger"
+start "" "C:\Python312\pythonw.exe" "H:\Strata-custom\stack_tray.py" --autostart
+
+if not exist "engine\strata.exe" (
+  echo [引擎] 新目录没有引擎，从备份目录找一个顶上（setup 会自动升级）...
+  for /D %%D in ("H:\Strata-main-*") do if exist "%%D\engine\strata.exe" (
+    xcopy /E /I /Y "%%D\engine" "engine\" >nul
+  )
+)
+
+if not exist ".venv\Scripts\python.exe" (
+  echo [首次] 创建 Python 环境并安装（约几分钟）...
+  "C:\Python312\python.exe" -m venv .venv
+  ".venv\Scripts\python.exe" -m pip install --quiet --disable-pip-version-check -r requirements.txt
+  ".venv\Scripts\python.exe" setup.py --port 8083 --yes %*
+  echo.
+  echo [提示] 安装结束，错误码 %errorlevel%。
+  pause
+  exit /b %errorlevel%
+)
+
+".venv\Scripts\python.exe" setup.py --port 8083 %*
+
+echo.
+echo [提示] 主脑已退出，错误码 %errorlevel%。
+pause
