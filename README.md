@@ -1,7 +1,7 @@
 # Strata RTX 5080 Stack（Strata 本地推理定制栈 · 5080/64GB 专精调优）
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
-[![Strata](https://img.shields.io/badge/Engine-Strata%200.1.47-green.svg)](https://github.com/Niko1221/Strata)
+[![Strata](https://img.shields.io/badge/Engine-Strata%200.1.48-green.svg)](https://github.com/Niko1221/Strata)
 [![CUDA](https://img.shields.io/badge/CUDA-13.0-76B900.svg)](https://developer.nvidia.com/cuda-toolkit)
 [![OpenAI Compatible](https://img.shields.io/badge/API-OpenAI%20%2F%20Anthropic%20%2F%20Responses-orange.svg)](http://127.0.0.1:8081/v1)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -14,7 +14,7 @@
 ## 它是什么
 
 ```
-① 官方层（不在本仓库）  H:\Strata-main    Strata 0.2.2 源码 + 官方引擎 0.1.47（签名 feed 取得）
+① 官方层（不在本仓库）  H:\Strata-main    Strata 0.2.2 源码 + 官方引擎 0.1.48（签名 feed 取得）
 ② 定制层（本仓库）      H:\Strata-custom  启动器 / 统一网关 / MCP 网关 / 两个方案的运行配置 / 调优档案
 ③ 资产层（不在本仓库）  H:\models  H:\Strata-data   GGUF 权重、专家包、MTP、tokenizer
 ```
@@ -102,13 +102,20 @@ ready: http://127.0.0.1:8083/v1 (OpenAI: /v1/chat/completions, Anthropic: /v1/me
 
 ### 已知取舍：16GB 显存的边界
 
-在 131072 上下文下，专家缓存会占到 7.25~7.53 GiB，**只剩约 0.55~0.62 GiB**，引擎会告警：
+在 131072 上下文下，专家缓存会吃掉 7.25~7.52 GiB 显存：
 
-> only 615 MiB of VRAM free ... when the card is this full the driver can page GPU memory to system RAM,
-> decode falls to a few tok/s and a window may never finish
+| 引擎 | 专家缓存 | 启动后剩余显存 |
+| :--- | :--- | :--- |
+| 0.1.47 | 3794 槽 / 7.25 GiB | 约 555~615 MiB |
+| **0.1.48** | **3940 槽 / 7.52 GiB** | **约 395 MiB**（首个请求降到 221 MiB） |
 
-这不是升级引入的（0.1.45 起就有），是 128K 上下文在这张卡上的物理边界。
-想更稳就把 `--vram-reserve-mib` 提到 1536（专家缓存变小、命中率略降）；
+0.1.48 会自己把专家缓存填得更满，所以同一套参数下剩余显存更少，引擎日志直接给了建议：
+
+> only 221 MiB of VRAM free at the start of this request (below 1024 MiB) ... Add `--vram-reserve-mib 1856`
+> to the config's args, or lower `--max-context` / `--batch`
+
+这不是升级引入的新问题（0.1.45 起就有），是 128K 上下文在这张卡上的物理边界。
+想更稳就把 `--vram-reserve-mib` 提到 **1856**（专家缓存少约 0.8 GiB、命中率略降）；
 本机目前**保持 1024 不动**，实测速度优先。
 
 方案 B（去掉视觉）能把约 1.5G 显存还给专家缓存，实测纯文本可达 65-75+ tok/s。
@@ -146,7 +153,7 @@ Start-Service SysMain
 
 | 位置 | 内容 |
 | :--- | :--- |
-| `H:\Strata-main` | 上游 Strata 0.2.2 源码 + 官方引擎 0.1.47 |
+| `H:\Strata-main` | 上游 Strata 0.2.2 源码 + 官方引擎 0.1.48 |
 | `H:\models` | GGUF 原始权重（134 GB） |
 | `H:\Strata-data` | 准备好的专家包 `packs\`、MTP `mtp\rt`、tokenizer |
 | `H:\Strata-custom\log` | 引擎日志 |
@@ -163,6 +170,7 @@ Start-Service SysMain
 | :--- | :--- |
 | 2026-10-14 | 初始定制版 |
 | 2026-10-22 | 上游升级到 Strata 0.2.2 / 引擎 0.1.47（签名 feed，ed25519 验签 + SHA-256 校验）；统一网关补刀/档位粘住/剪枝 v2/开工方式注入落地；官方桌面版试用后卸载；清理 5GB 未用 MTP 张量源 |
+| 2026-10-24 | 引擎单独升到 **0.1.48**（源码层仍 0.2.2）：官方签名 feed sequence 112 的 windows-x86_64-cuda-cuda13 包，包 SHA-256 与 feed 一致；新增 DFlash2 草稿源、会话缓存改按空闲内存自动定尺寸；本机 128K 下专家缓存多占 0.27 GiB（剩余显存约 395 MiB） |
 
 ---
 

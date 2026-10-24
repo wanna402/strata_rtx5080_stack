@@ -5,7 +5,7 @@
     "与机器无关的通用层（上游 Strata 源码、模型权重、专家包）不在本仓库，见 decoupled 段。"
   ],
   "profile": "rtx5080-16gb / 64gb-ram / win11",
-  "updated": "2026-10-22",
+  "updated": "2026-10-24",
 
   "hardware": {
     "gpu": "NVIDIA GeForce RTX 5080",
@@ -26,10 +26,10 @@
   "install": {
     "source_install": "H:\\Strata-main",
     "strata_source_version": "0.2.2",
-    "engine_version": "0.1.47",
+    "engine_version": "0.1.48",
     "engine_dir": "H:\\Strata-main\\engine",
-    "engine_provenance": "官方签名 feed（ed25519 key 5d1bc23abbeffd0d 验签通过，6/6 文件 SHA-256 校验）",
-    "engine_rollback": "无（engine/.previous 已按要求删除）",
+    "engine_provenance": "官方签名 feed sequence 112（ed25519 key 5d1bc23abbeffd0d 验签；包 SHA-256 1e1611b0…71b95 与 feed 一致；6 个二进制对签名清单 5/6 一致，BUILD.json 只把 source 归一为 prebuilt，与 setup.py 的 engine_from_feed 相同）",
+    "engine_rollback": "有：H:\\Strata-data\\engine-backup\\0.1.47（exe/vision/kq/BUILD，约 330 MB）与 engine-backup\\strata-engine-0.1.48-windows-cuda13.tar.gz（554 MB 签名包原件）；setup.py --rollback-engine 仍不可用（没有 engine/.previous）",
     "python": "C:\\Python312 (3.12.8)",
     "venv": "H:\\Strata-main\\.venv",
     "settings_file": "H:\\Strata-settings\\settings.json",

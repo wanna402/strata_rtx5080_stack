@@ -13,11 +13,11 @@
   - 确认 8081 / 8083 / 8087 三个端口都空了。
 - 用户要的"命令窗口 + 8083 主模型实时日志"是**他们自己那个窗口**。不要用后台/最小化/隐藏的方式另开一个替身窗口。
 
-## 二、这台机器的现状（2026-10-22 更新后）
+## 二、这台机器的现状（2026-10-24 更新后）
 
 | 东西 | 位置 | 说明 |
 |---|---|---|
-| 源码安装 | `H:\Strata-main` | Strata **0.2.2**（引擎 0.1.47，官方引擎，未改动） |
+| 源码安装 | `H:\Strata-main` | Strata **0.2.2** 源码 + 官方引擎 **0.1.48**（均未改动） |
 | 定制层 | `H:\Strata-custom` | launcher.py / stack_tray.py / gateway(8081,8087) / configs / log |
 | 启动入口 | `H:\Strata-custom\Strata-启动.bat` | 方案 A=1 / 方案 B=2；**关窗口 = 停模型** |
 | 模型权重 | `H:\models\...abliterated-IQ3_S-0000X-of-00002.gguf` | 脚本栈直接用这里的**原名**文件 |
@@ -37,8 +37,18 @@
 - **别动 `H:\Strata-custom\configs\*.json` 里的路径**：launcher 每次启动都用模板重写 `H:\Strata-main\strata-abliterated-iq3_s.json`。
 - **桌面版曾经用过的"官方名硬链接 + `.done` 标记"目录已删**（`H:\Strata-data\models\`）。要再让官方工具认这个模型，才需要重建（硬链接 0 额外占用）。
 - **硬链接不是拷贝**：`fsutil hardlink list` 能看到同一份数据的多个名字；删一个名字不释放空间。统计磁盘占用别用简单求和。
-- 引擎版本回滚（`setup.py --rollback-engine`）依赖 `engine\.previous`，**已按用户要求删除**，现在没有引擎级回滚了。
-- 显存：16G 卡在 131072 上下文下只剩约 0.6G，引擎会告警（0.1.45 就有，非升级引入）；用户选择保持 `--vram-reserve-mib 1024` 不动。
+- 引擎版本回滚：`setup.py --rollback-engine` 依赖 `engine\.previous`，**已按用户要求删除**。现在的回滚料是
+  `H:\Strata-data\engine-backup\0.1.47\`（上一版 exe/vision/kq/BUILD）和 `engine-backup\strata-engine-0.1.48-windows-cuda13.tar.gz`
+  （0.1.48 签名包原件）—— 要回退就手工把文件拷回 `H:\Strata-main\engine\`。
+
+- **引擎单独升级时，官方 `strata.py update` 会假失败**（2026-10-24 实测）：它的试启动校验要求 serve 层认
+  `verify` 握手（0.2.3+ 才有），0.2.2 的 serve 上会等到 `startup_wait_expired` 才报 "did not pass its test start"。
+  引擎本身其实已经跑起来并正常出字。做法：`strata.py update --check` 读签名 feed 拿包名/SHA-256，
+  从 `.updates\partial\` 下那个以 SHA 前 16 位命名、后缀 `.part` 的文件拿到已下完的包，核对 SHA-256 后 `tar -xzf` 解包，
+  文件覆盖进 `engine\`，并把 `BUILD.json` 的 `source` 归一成 `prebuilt`（`setup.py` 自己也这么写），
+  最后 `engine\strata.exe --version` 确认。
+- 显存：16G 卡在 131072 上下文下，0.1.47 只剩约 0.6G、0.1.48 只剩约 0.4G（专家缓存 3940 槽 / 7.52 GiB），
+  引擎日志自己建议 `--vram-reserve-mib 1856`；用户目前仍选择 `1024`（速度优先），别擅自改。
 - C 盘紧张（~33G 空闲），H 盘宽松（~199G 空闲）。清理优先动 C 盘的缓存，别删 H 盘用户资产。
 
 ## 四、报告口径
