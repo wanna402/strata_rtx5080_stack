@@ -1,0 +1,103 @@
+{
+  "env": {
+    "when": "2026-10-24T21:11:13",
+    "tag": "schemeA-2400-decode512",
+    "log": "H:\\Strata-custom\\log\\8083_main_20261024.log",
+    "model_meta": {
+      "n_ctx": 131072
+    },
+    "ram": {
+      "modules": [
+        {
+          "GB": 32,
+          "Speed": 2400,
+          "ConfiguredClockSpeed": 2400,
+          "DeviceLocator": "Controller0-ChannelA-DIMM1"
+        },
+        {
+          "GB": 32,
+          "Speed": 2400,
+          "ConfiguredClockSpeed": 2400,
+          "DeviceLocator": "Controller1-ChannelA-DIMM1"
+        }
+      ]
+    },
+    "gpu": {
+      "vram_used_mib": 15584,
+      "vram_total_mib": 16303,
+      "gpu_util_pct": 0,
+      "temp_c": 44,
+      "sm_clock_mhz": 2685
+    },
+    "max_tokens": 512,
+    "reps": 3
+  },
+  "rows": [
+    {
+      "target_prompt_tokens": 4096,
+      "rep": 1,
+      "http": 200,
+      "wall_s": 9.92,
+      "prompt_tokens": 7131,
+      "completion_tokens": 512,
+      "engine_prompt_tokens": 7131,
+      "engine_reused_tokens": 0,
+      "engine_read_tokens": 7131,
+      "prefill_ms": 2492,
+      "prefill_tok_s": 2862.0,
+      "decode_tokens": 512,
+      "decode_ms": 7403,
+      "decode_tok_s": 69.2
+    },
+    {
+      "target_prompt_tokens": 4096,
+      "rep": 2,
+      "http": 200,
+      "wall_s": 10.65,
+      "prompt_tokens": 7298,
+      "completion_tokens": 512,
+      "engine_prompt_tokens": 7298,
+      "engine_reused_tokens": 0,
+      "engine_read_tokens": 7298,
+      "prefill_ms": 2537,
+      "prefill_tok_s": 2876.1,
+      "decode_tokens": 512,
+      "decode_ms": 8101,
+      "decode_tok_s": 63.2
+    },
+    {
+      "target_prompt_tokens": 4096,
+      "rep": 3,
+      "http": 200,
+      "wall_s": 10.3,
+      "prompt_tokens": 7270,
+      "completion_tokens": 512,
+      "engine_prompt_tokens": 7270,
+      "engine_reused_tokens": 0,
+      "engine_read_tokens": 7270,
+      "prefill_ms": 2678,
+      "prefill_tok_s": 2714.8,
+      "decode_tokens": 512,
+      "decode_ms": 7600,
+      "decode_tok_s": 67.4
+    }
+  ],
+  "summary": {
+    "4096": {
+      "n": 3,
+      "prefill_tok_s_mean": 2817.6,
+      "prefill_tok_s_min": 2714.8,
+      "prefill_tok_s_max": 2876.1,
+      "decode_tok_s_mean": 66.6,
+      "decode_tok_s_min": 63.2,
+      "decode_tok_s_max": 69.2,
+      "engine_read_tokens_mean": 7233
+    }
+  },
+  "overall": {
+    "prefill_tok_s_mean": 2817.6,
+    "decode_tok_s_mean": 66.6,
+    "decode_tok_s_mean_short_prompts_4k_and_below": 66.6,
+    "decode_tok_s_mean_long_prompts_16k_plus": null
+  }
+}

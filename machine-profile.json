@@ -15,6 +15,13 @@
     "cuda_runtime": "13.0",
     "engine_min_driver": "580.65",
     "system_ram_gib": 63.8,
+    "ram": {
+      "modules": "2 x 32GB DDR4 (光威 Gloway TAC4U3200E18321C, 序列号 D4322290 / D4322352，不同批)",
+      "running_mts": 2400,
+      "running_voltage_v": 1.2,
+      "rated_mts": 3200,
+      "note": "2026-10-24 起 3200 进不了系统（BIOS 多次调整、重插无效），退回 JEDEC 2400；SMBIOS Speed/ConfiguredClockSpeed 均为 2400 = XMP 未生效。主板 ASUS TUF GAMING B660M-E D4 / BIOS 3811 / i5-12490F，两条各占一个通道。"
+    },
     "cpu_cores_physical": 16,
     "os": "Windows 11 (10.0.26300)",
     "disks": {
@@ -83,7 +90,7 @@
       "name": "纯文本极速冲刺版",
       "config": "configs/strata-scheme-B-novision.json",
       "extra_args": [],
-      "use": "纯文本/代码冲刺。卸掉视觉释放约 1.5G 显存给专家缓存，实测 65-75+ tok/s。"
+      "use": "纯文本/代码冲刺。卸掉视觉把显存让给专家缓存。注意：2026-10-24 实测本机自动定容只多给 45 槽（3858 vs 3813），输出速度与方案 A 持平（54.6~55.2 vs 55.5~57.3 tok/s），历史文档里的 65-75+ tok/s 来自命中率更高的真实对话日志。"
     }
   },
 
@@ -97,12 +104,14 @@
     "16GB 显存在 131072 上下文下，专家缓存占 7.25~7.53 GiB，只剩约 0.55~0.62 GiB，引擎会告警 #2065（可能掉速甚至卡窗口）。0.1.45 起就如此，非升级引入。",
     "想更稳：把 configs 里 --vram-reserve-mib 从 1024 提到 1536（专家缓存变小、命中率略降）。用户 2026-10-22 决定保持 1024 不动。",
     "64GB 内存下专家常驻约 46.84 GiB，装载需 30~45 秒；方案 A 与脚本栈不可与其它模型实例同时运行。",
+    "内存跑在 2400（3200 不稳）：decode 期间专家缓存命中 79~82%、KV 99.4% 在显存，只有 5~8% 走 RAM/PCIe，所以对出字速度影响是个位数百分比；真正吃内存带宽的是长上下文 + 命中率下降的场景。",
+    "实测速度与方法在 bench/README.md；复测用 bench/bench_speed.py（数字取自引擎日志，不用客户端掐表）。",
     "H:\\Strata-data\\mtp\\tensors（5GB 原始张量）已删，引擎只读 mtp\\rt；日后重建 MTP 会重新下载。"
   ],
 
   "decoupled": {
     "_note": "与本机调优无关、或属于上游/大文件资产的部分，一律不进这个仓库",
-    "upstream_source": "H:\\Strata-main（上游 Strata 0.2.2 源码，更新时整包覆盖）",
+    "upstream_source": "H:\\Strata-main（上游 Strata 0.2.4.2 源码，更新时整包覆盖）",
     "weights": "H:\\models（134GB GGUF 原始权重）",
     "prepared_model": "H:\\Strata-data\\packs + mtp（官方准备好的专家包与 MTP）",
     "runtime_logs": "H:\\Strata-custom\\log（引擎日志 8083_main_YYYYMMDD.log）",
