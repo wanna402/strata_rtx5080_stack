@@ -14,7 +14,7 @@
 ## 它是什么
 
 ```
-① 官方层（不在本仓库）  H:\Strata-main    Strata 0.2.2 源码 + 官方引擎 0.1.48（签名 feed 取得）
+① 官方层（不在本仓库）  H:\Strata-main    Strata 0.2.4.2 源码 + 官方引擎 0.1.48（签名 feed 取得）
 ② 定制层（本仓库）      H:\Strata-custom  启动器 / 统一网关 / MCP 网关 / 两个方案的运行配置 / 调优档案
 ③ 资产层（不在本仓库）  H:\models  H:\Strata-data   GGUF 权重、专家包、MTP、tokenizer
 ```
@@ -107,9 +107,10 @@ ready: http://127.0.0.1:8083/v1 (OpenAI: /v1/chat/completions, Anthropic: /v1/me
 | 引擎 | 专家缓存 | 启动后剩余显存 |
 | :--- | :--- | :--- |
 | 0.1.47 | 3794 槽 / 7.25 GiB | 约 555~615 MiB |
-| **0.1.48** | **3940 槽 / 7.52 GiB** | **约 395 MiB**（首个请求降到 221 MiB） |
+| **0.1.48**（官方试启动） | 3940 槽 / 7.52 GiB | 约 395 MiB（首个请求降到 221 MiB） |
+| **0.1.48**（正常启动，带网关/托盘） | **3848 槽 / 7.35 GiB** | **约 452~466 MiB** |
 
-0.1.48 会自己把专家缓存填得更满，所以同一套参数下剩余显存更少，引擎日志直接给了建议：
+0.1.48 会自己把专家缓存填得更满，所以同一套参数下剩余显存更少（具体槽数取决于启动时空闲内存），引擎日志直接给了建议：
 
 > only 221 MiB of VRAM free at the start of this request (below 1024 MiB) ... Add `--vram-reserve-mib 1856`
 > to the config's args, or lower `--max-context` / `--batch`
@@ -124,13 +125,18 @@ ready: http://127.0.0.1:8083/v1 (OpenAI: /v1/chat/completions, Anthropic: /v1/me
 
 ## 更新上游 Strata（不影响本仓库）
 
+源码层（非 git 副本）更新方式：下载官方 tag 的 zip，覆盖到 `H:\Strata-main`（保留 `.venv` / `engine` / `data` / `log` / 模型配置），然后：
+
 ```bat
 cd /d H:\Strata-main
-UPDATE.bat          :: 非 git 克隆会提示，忽略即可；它会从签名 feed 拉新引擎
+.venv\Scripts\python.exe setup.py --update
 ```
 
-上游换的是 `H:\Strata-main`（源码 + 引擎），**本仓库一行都不用动**。
-换完引擎后本仓库的 `machine-profile.json` 里 `install.engine_version` 需要跟着更新。
+`UPDATE.bat` 在这台机器上是非 git 副本，它的 `git pull` 段会提示跳过；真正干活的是里面那次 `setup.py --update`（补 Python 包、按需换引擎、升级模型配置）。**本仓库一行都不用动**，
+只有 `machine-profile.json` 里的 `install.strata_source_version` / `engine_version` 需要跟着记一笔。
+
+引擎单独更新时注意：官方 `strata.py update` 的“试启动校验”要求 serve 层认 `verify` 握手（0.2.3+ 才有）。
+现在源码层已是 0.2.4.2，所以以后 `strata.py update --no-control` 可以正常自己走完。
 
 ---
 
@@ -153,7 +159,7 @@ Start-Service SysMain
 
 | 位置 | 内容 |
 | :--- | :--- |
-| `H:\Strata-main` | 上游 Strata 0.2.2 源码 + 官方引擎 0.1.48 |
+| `H:\Strata-main` | 上游 Strata 0.2.4.2 源码 + 官方引擎 0.1.48 |
 | `H:\models` | GGUF 原始权重（134 GB） |
 | `H:\Strata-data` | 准备好的专家包 `packs\`、MTP `mtp\rt`、tokenizer |
 | `H:\Strata-custom\log` | 引擎日志 |
@@ -170,7 +176,7 @@ Start-Service SysMain
 | :--- | :--- |
 | 2026-10-14 | 初始定制版 |
 | 2026-10-22 | 上游升级到 Strata 0.2.2 / 引擎 0.1.47（签名 feed，ed25519 验签 + SHA-256 校验）；统一网关补刀/档位粘住/剪枝 v2/开工方式注入落地；官方桌面版试用后卸载；清理 5GB 未用 MTP 张量源 |
-| 2026-10-24 | 引擎单独升到 **0.1.48**（源码层仍 0.2.2）：官方签名 feed sequence 112 的 windows-x86_64-cuda-cuda13 包，包 SHA-256 与 feed 一致；新增 DFlash2 草稿源、会话缓存改按空闲内存自动定尺寸；本机 128K 下专家缓存多占 0.27 GiB（剩余显存约 395 MiB） |
+| 2026-10-24 | 引擎升到 **0.1.48**、源码层升到 **0.2.4.2**（桌面端不装，只用脚本栈 + DSH 前端）：引擎取自官方签名 feed sequence 112 的 `windows-x86_64-cuda-cuda13` 包（包 SHA-256 与 feed 一致）；源码层用官方 v0.2.4.2 tag 热覆盖并跑 `setup.py --update`（补 truststore/certifi）。0.1.48 新增 DFlash2 草稿源与会话缓存自动尺寸；128K 下专家缓存多占约 0.1~0.3 GiB |
 
 ---
 

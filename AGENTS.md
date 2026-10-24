@@ -17,7 +17,7 @@
 
 | 东西 | 位置 | 说明 |
 |---|---|---|
-| 源码安装 | `H:\Strata-main` | Strata **0.2.2** 源码 + 官方引擎 **0.1.48**（均未改动） |
+| 源码安装 | `H:\Strata-main` | Strata **0.2.4.2** 源码 + 官方引擎 **0.1.48**（均未改动） |
 | 定制层 | `H:\Strata-custom` | launcher.py / stack_tray.py / gateway(8081,8087) / configs / log |
 | 启动入口 | `H:\Strata-custom\Strata-启动.bat` | 方案 A=1 / 方案 B=2；**关窗口 = 停模型** |
 | 模型权重 | `H:\models\...abliterated-IQ3_S-0000X-of-00002.gguf` | 脚本栈直接用这里的**原名**文件 |
@@ -41,15 +41,24 @@
   `H:\Strata-data\engine-backup\0.1.47\`（上一版 exe/vision/kq/BUILD）和 `engine-backup\strata-engine-0.1.48-windows-cuda13.tar.gz`
   （0.1.48 签名包原件）—— 要回退就手工把文件拷回 `H:\Strata-main\engine\`。
 
-- **引擎单独升级时，官方 `strata.py update` 会假失败**（2026-10-24 实测）：它的试启动校验要求 serve 层认
-  `verify` 握手（0.2.3+ 才有），0.2.2 的 serve 上会等到 `startup_wait_expired` 才报 "did not pass its test start"。
-  引擎本身其实已经跑起来并正常出字。做法：`strata.py update --check` 读签名 feed 拿包名/SHA-256，
-  从 `.updates\partial\` 下那个以 SHA 前 16 位命名、后缀 `.part` 的文件拿到已下完的包，核对 SHA-256 后 `tar -xzf` 解包，
-  文件覆盖进 `engine\`，并把 `BUILD.json` 的 `source` 归一成 `prebuilt`（`setup.py` 自己也这么写），
-  最后 `engine\strata.exe --version` 确认。
-- 显存：16G 卡在 131072 上下文下，0.1.47 只剩约 0.6G、0.1.48 只剩约 0.4G（专家缓存 3940 槽 / 7.52 GiB），
+- **桌面端不装**：用户只用 DSH 当界面，Strata 只提供服务（8083 原生接口 / 8081 统一网关 / 8087 MCP）。
+  2026-10-22 试过官方 0.2.2 桌面版，确认会起第二套引擎、抢内存，已完整卸载，不要因为"新版本有界面改进"再装回来。
+
+- **引擎与源码层可以分开升，但最好配套**：2026-10-24 先只升引擎到 0.1.48（源码层还是 0.2.2），
+  官方 `strata.py update` 的试启动校验在 0.2.2 的 serve 上会等到 `startup_wait_expired` 才报
+  "did not pass its test start"（0.2.2 的 serve 不认 0.2.3+ 的 `verify` 握手），引擎本身其实正常出字。
+  后来源码层补到 0.2.4.2，这个假失败就没了。只升引擎时的兜底做法：`strata.py update --check` 读签名 feed
+  拿包名/SHA-256，从 `.updates\partial\` 下那个以 SHA 前 16 位命名、后缀 `.part` 的文件拿到包，核对 SHA-256 后
+  `tar -xzf` 解包，覆盖进 `engine\`，把 `BUILD.json` 的 `source` 归一成 `prebuilt`，最后 `strata.exe --version` 确认。
+
+- **源码层升级方式**（非 git 副本）：官方 tag 的 zip 解包后热覆盖 `H:\Strata-main`，
+  但**必须排除** `.venv` / `engine` / `data` / `log` / `bin` / `ref` / `strata-abliterated-iq3_s.json`，
+  然后跑 `.venv\Scripts\python.exe setup.py --update`（补 Python 包、按需换引擎、升级模型配置）。
+  不要整目录删掉重装：模型配置、专家画像、venv 都会丢。
+- 显存：16G 卡在 131072 上下文下，0.1.47 只剩约 0.6G；0.1.48 正常启动（带网关/托盘）约剩 0.45G
+  （专家缓存 3848 槽 / 7.35 GiB，官方试启动时 3940 槽 / 7.52 GiB、只剩 395 MiB），
   引擎日志自己建议 `--vram-reserve-mib 1856`；用户目前仍选择 `1024`（速度优先），别擅自改。
-- C 盘紧张（~33G 空闲），H 盘宽松（~199G 空闲）。清理优先动 C 盘的缓存，别删 H 盘用户资产。
+- C 盘紧张（~33G 空闲），H 盘宽松（~194G 空闲）。清理优先动 C 盘的缓存，别删 H 盘用户资产。
 
 ## 四、报告口径
 

@@ -25,7 +25,7 @@
 
   "install": {
     "source_install": "H:\\Strata-main",
-    "strata_source_version": "0.2.2",
+    "strata_source_version": "0.2.4.2",
     "engine_version": "0.1.48",
     "engine_dir": "H:\\Strata-main\\engine",
     "engine_provenance": "官方签名 feed sequence 112（ed25519 key 5d1bc23abbeffd0d 验签；包 SHA-256 1e1611b0…71b95 与 feed 一致；6 个二进制对签名清单 5/6 一致，BUILD.json 只把 source 归一为 prebuilt，与 setup.py 的 engine_from_feed 相同）",

@@ -1,5 +1,5 @@
-﻿strata-custom-stack 2026-10-22 (RTX 5080 + 64GB RAM 深度优化)
-版本: 源码安装 0.2.2 / 推理引擎 0.1.48 (CUDA 13.0, sm_75/86/89/120)
+﻿strata-custom-stack 2026-10-24 (RTX 5080 + 64GB RAM 深度优化)
+版本: 源码安装 0.2.4.2 / 推理引擎 0.1.48 (CUDA 13.0, sm_75/86/89/120)
 配置: qwen3.8-flash-next-abliterated-iq3_s / 端口 8083 / 上下文 131072 / KV INT8
 当前方案:
   - 方案 A (当前默认): 128K 长上下文 + KV-Resident 流式驻留(32768) + 异步换页 + 视觉编码器 + 隧道动态支持
@@ -10,7 +10,7 @@
   (启动后: 8083=Strata服务, 8081=统一网关, 8087=MCP网关)
 
 目录分布 (全部在 H 盘, C 盘只有一个 0 字节目录联接):
-  H:\Strata-main          源码安装 0.2.2 (setup.py / serve / engine / .venv)
+  H:\Strata-main          源码安装 0.2.4.2 (setup.py / serve / engine / .venv)
   H:\Strata-custom        本定制层 (launcher.py / configs / gateway / tray / log)
   H:\Strata-data          模型包/MTP (packs\abliterated-iq3_s, mtp\rt)
   H:\Strata-settings      源码安装的 settings.json  <- AppData\Roaming\Strata 联接
@@ -18,7 +18,9 @@
   C:\...\AppData\Roaming\Strata  -> H:\Strata-settings   [联接, 0 字节]
 
 升级记录:
-  2026-10-24  引擎 0.1.47 -> 0.1.48 (源码层保持 0.2.2)
+  2026-10-24  源码 0.2.2 -> 0.2.4.2 / 引擎 0.1.47 -> 0.1.48
+    - 源码层：官方 v0.2.4.2 tag 的 zip 热覆盖（保留 .venv / engine / data / log / 模型配置），
+      setup.py --update 通过（pip 补 truststore / certifi，模型配置升级，引擎 0.1.48 被认作已就绪）
     - 官方 signed feed sequence 112 给本卡(windows-x86_64-cuda-cuda13, sm_120) 的包
     - 包 SHA-256 与 feed 一致 (1e1611b0...71b95), 6 个二进制对签名清单逐个校验
     - 官方 strata.py update 的试启动校验在 0.2.2 serve 上报 startup_wait_expired
@@ -37,6 +39,6 @@
   - 16G 显存在 131072 上下文下只剩约 0.6G 可用, 引擎会告警. 这是既有状态(0.1.45 就有),
     不是升级引入; 想更稳就把 configs 里 --vram-reserve-mib 从 1024 提到 1536
     (专家缓存会小一点, 命中率略降).
-  - 引擎是官方 Strata 0.1.48, 源码层仍是 0.2.2, 两边都未做任何改动; 定制层只在之上加启动器/网关/配置.
+  - 引擎是官方 Strata 0.1.48, 源码层是官方 Strata 0.2.4.2, 两边都未做任何改动; 定制层只在之上加启动器/网关/配置.
   - 0.1.48 在 131072 上下文下给自己多拿了约 0.27 GiB 专家缓存 (3940 槽 / 7.52 GiB),
     只剩约 395 MiB 显存; 引擎日志建议 --vram-reserve-mib 1856. 当前配置仍为 1024 (速度优先).
